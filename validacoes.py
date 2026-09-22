@@ -1,5 +1,4 @@
 
-import os
 def validar_inteiro (entrada: str, minimo: int= 0):
     try:
         numero = int(entrada)
@@ -14,8 +13,8 @@ def validar_float (entrada: str, minimo: float = 0.0):
     entrada =  entrada.strip().replace(',', '.')
     try:
         numero = float(entrada)
-    except:
-        raise ValueError("DIgite um número válido!")
+    except ValueError:
+        raise ValueError("Digite um número válido!")
     if numero < minimo:
         raise ValueError(f"O valor precisa ser maior ou igual a {minimo}!")
     return numero
@@ -29,7 +28,7 @@ def validar_texto(entrada: str):
     return entrada
 
 def formatar_preco(preco: float):
-    return f"R${preco: .2f}".replace('.',',')
+    return f"R${preco:.2f}".replace('.',',')
 
 def pedir(mensagem, validador):
     while True:

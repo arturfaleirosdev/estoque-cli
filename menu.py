@@ -35,10 +35,10 @@ while True:
             os.system("cls" if os.name == "nt" else "clear")
 
             # Pede os dados do novo produto usando as funções de validação
-            nome_produto = pedir("Digite o nome do produto: ").title()
-            quantidade_estoque = pedir("Quantidade de produto em estoque: ")
-            categoria_produto = validar_texto("Qual a categoria do produto: ").title()
-            preco_produto = validar_float("Qual o preço do Produto: ")
+            nome_produto = pedir("Digite o nome do produto: ", validar_texto).title()
+            quantidade_estoque = pedir("Quantidade de produto em estoque: ", validar_inteiro)
+            categoria_produto = pedir("Qual a categoria do produto: ", validar_texto).title()
+            preco_produto = pedir("Qual o preço do Produto: ", validar_float)
 
             # Monta o dicionário do produto
             produto = {
@@ -76,7 +76,7 @@ while True:
                     print(10*'-')
                     print(f"Estoque: {p['Estoque']}")
                     print(10*'-')
-                    print(f"Preço: {p['Preço']}")
+                    print(f"Preço: {formatar_preco(p['Preço'])}")
                     print(10*'-')
 
             input("\nPressione ENTER para voltar ao menu inicial...")
@@ -102,11 +102,11 @@ while True:
                     print(10*'-')
                     print(f"Estoque: {p['Estoque']}")
                     print(10*'-')
-                    print(f"Preço: {p['Preço']}")
+                    print(f"Preço: {formatar_preco(p['Preço'])}")
                     print(10*'-')
 
                 # Pede o ID do produto que quer editar (valor() já garante que é número)
-                procurar_id = validar_inteiro("\nDigite o ID do produto que deseja editar: ")
+                procurar_id = pedir("\nDigite o ID do produto que deseja editar: ", validar_inteiro)
 
                 # Procura o produto com esse ID dentro da lista
                 produto_encontrado = None
@@ -163,9 +163,9 @@ while True:
             else:
                 print("Lista de Produtos\n")
                 for p in produtos:
-                    print(f"ID: {p['ID']} | Nome: {p['Nome']} | Categoria: {p['Categoria']} | Estoque: {p['Estoque']} | Preço: {p['Preço']}")
+                    print(f"ID: {p['ID']} | Nome: {p['Nome']} | Categoria: {p['Categoria']} | Estoque: {p['Estoque']} | Preço: {formatar_preco(p['Preço'])}")
 
-                procurar_id = validar_inteiro("\nDigite o ID do produto que deseja deletar: ")
+                procurar_id = pedir("\nDigite o ID do produto que deseja deletar: ", validar_inteiro)
 
                 produto_encontrado = None
                 for p in produtos:
