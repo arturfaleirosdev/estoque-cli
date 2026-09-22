@@ -1,0 +1,11 @@
+# Dados locais gerados pelo programa
+estoque.json
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# Credenciais (quando entrar o MySQL)
+.env

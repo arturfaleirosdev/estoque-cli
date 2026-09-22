@@ -1,7 +1,7 @@
 import os
 import time
 import json
-from validacoes import texto, pedir_float, valor
+from validacoes import validar_texto , validar_inteiro, validar_float, formatar_preco, pedir
 
 ARQUIVO = 'estoque.json'
 
@@ -35,10 +35,10 @@ while True:
             os.system("cls" if os.name == "nt" else "clear")
 
             # Pede os dados do novo produto usando as funções de validação
-            nome_produto = texto("Digite o nome do produto: ").title()
-            quantidade_estoque = valor("Quantidade de produto em estoque: ")
-            categoria_produto = texto("Qual a categoria do produto: ").title()
-            preco_produto = pedir_float("Qual o preço do Produto: ")
+            nome_produto = pedir("Digite o nome do produto: ").title()
+            quantidade_estoque = pedir("Quantidade de produto em estoque: ")
+            categoria_produto = validar_texto("Qual a categoria do produto: ").title()
+            preco_produto = validar_float("Qual o preço do Produto: ")
 
             # Monta o dicionário do produto
             produto = {
@@ -46,7 +46,7 @@ while True:
                 "Nome": nome_produto,
                 "Categoria": categoria_produto,
                 "Estoque": quantidade_estoque,
-                "Preço": f"R${preco_produto:.2f}".replace('.', ',')
+                "Preço":  preco_produto
             }
 
             # Adiciona na lista e salva tudo no arquivo JSON
@@ -106,7 +106,7 @@ while True:
                     print(10*'-')
 
                 # Pede o ID do produto que quer editar (valor() já garante que é número)
-                procurar_id = valor("\nDigite o ID do produto que deseja editar: ")
+                procurar_id = validar_inteiro("\nDigite o ID do produto que deseja editar: ")
 
                 # Procura o produto com esse ID dentro da lista
                 produto_encontrado = None
@@ -142,7 +142,7 @@ while True:
                     print(f"\nPreço Atual: {produto_encontrado['Preço']}")
                     novo_preco = input("Novo Preço (ENTER para manter): ")
                     if novo_preco.strip():
-                        produto_encontrado['Preço'] = f"R${float(novo_preco):.2f}".replace('.', ',')
+                        produto_encontrado['Preço'] = validar_float(novo_preco)
 
                     with open(ARQUIVO, 'w', encoding='utf-8') as arquivo:
                         json.dump(produtos, arquivo, ensure_ascii=False, indent=4)
@@ -165,7 +165,7 @@ while True:
                 for p in produtos:
                     print(f"ID: {p['ID']} | Nome: {p['Nome']} | Categoria: {p['Categoria']} | Estoque: {p['Estoque']} | Preço: {p['Preço']}")
 
-                procurar_id = valor("\nDigite o ID do produto que deseja deletar: ")
+                procurar_id = validar_inteiro("\nDigite o ID do produto que deseja deletar: ")
 
                 produto_encontrado = None
                 for p in produtos:

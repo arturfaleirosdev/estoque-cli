@@ -1,22 +1,40 @@
-def valor (mensagem):
-    while True:
-        try:
-            return int(input(mensagem))
-        except:
-            print("Digite um valor válido!")
 
-def texto (mensagem):
-    while True:
-        entrada = input(mensagem)
-        if entrada.isdigit():
-                print("Digite um texto valido!")
-        elif not  entrada.strip():
-            print("Não há nenhum texto! Digite um texto valido")
-        else:
-            return entrada
-def pedir_float (mensagem):
+import os
+def validar_inteiro (entrada: str, minimo: int= 0):
+    try:
+        numero = int(entrada)
+    except ValueError:
+        raise ValueError("Digite um número inteiro válido!")
+    if numero < minimo:
+        raise ValueError(f"O valor precisa ser maior ou igual a {minimo}!")
+    return numero
+    
+
+def validar_float (entrada: str, minimo: float = 0.0):
+    entrada =  entrada.strip().replace(',', '.')
+    try:
+        numero = float(entrada)
+    except:
+        raise ValueError("DIgite um número válido!")
+    if numero < minimo:
+        raise ValueError(f"O valor precisa ser maior ou igual a {minimo}!")
+    return numero
+
+def validar_texto(entrada: str):
+    entrada = entrada.strip()
+    if not entrada:
+        raise ValueError("Não há nenhum texto! Digite um texto válido.")
+    if entrada.isdigit():
+        raise ValueError("Digite um texto válido!")
+    return entrada
+
+def formatar_preco(preco: float):
+    return f"R${preco: .2f}".replace('.',',')
+
+def pedir(mensagem, validador):
     while True:
         try:
-            return float(input(mensagem))
-        except ValueError:
-            print("Digite um valor válido!")
+            return validador(input(mensagem))
+        except ValueError as erro:
+            print(erro)
+
