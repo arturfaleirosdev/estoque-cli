@@ -1,4 +1,7 @@
-# Dados locais gerados pelo programa
+# Banco de dados local (gerado ao rodar o programa)
+*.db
+
+# Formato antigo, antes da migração para SQLite
 estoque.json
 
 # Python
@@ -7,5 +10,5 @@ __pycache__/
 venv/
 .venv/
 
-# Credenciais (quando entrar o MySQL)
-.env
+# Rascunhos
+teste.py

@@ -1,22 +1,10 @@
 import os
 import time
-import json
-from validacoes import validar_texto , validar_inteiro, validar_float, formatar_preco, pedir
+from validacoes import validar_texto, validar_inteiro, validar_float, formatar_preco, pedir
+import repositorio
 
-ARQUIVO = 'estoque.json'
-
-# Carrega a lista JSON se existir
-if os.path.exists(ARQUIVO):
-    with open(ARQUIVO, 'r', encoding='utf-8') as arquivo:
-        produtos = json.load(arquivo)
-else:
-    produtos = []
-
-# Define qual ID vai estar disponivel, pegando o seu maximo e somando + 1
-if produtos:
-    proximo_id = max(p["ID"] for p in produtos) + 1
-else:
-    proximo_id = 1
+# Cria a tabela na primeira execução; nas seguintes o IF NOT EXISTS ignora
+repositorio.criar_tabela()
 
 while True:
     print(10*'-', "Bem vindo ao Sistema de Gerenciamento de Estoque", 10*'-')
@@ -30,131 +18,107 @@ while True:
 
     match opcao:
 
-        #  Cadastrar o produto
         case '1':
             os.system("cls" if os.name == "nt" else "clear")
 
-            # Pede os dados do novo produto usando as funções de validação
             nome_produto = pedir("Digite o nome do produto: ", validar_texto).title()
             quantidade_estoque = pedir("Quantidade de produto em estoque: ", validar_inteiro)
             categoria_produto = pedir("Qual a categoria do produto: ", validar_texto).title()
             preco_produto = pedir("Qual o preço do Produto: ", validar_float)
 
-            # Monta o dicionário do produto
-            produto = {
-                "ID": proximo_id,
-                "Nome": nome_produto,
-                "Categoria": categoria_produto,
-                "Estoque": quantidade_estoque,
-                "Preço":  preco_produto
-            }
-
-            # Adiciona na lista e salva tudo no arquivo JSON
-            produtos.append(produto)
-            with open(ARQUIVO, 'w', encoding='utf-8') as arquivo:
-                json.dump(produtos, arquivo, ensure_ascii=False, indent=4)
-
-            # Atribui o ID após o usuario digitar as informações solicitadas corretamente
-            proximo_id += 1
+            # O ID não é informado aqui: quem gera é o AUTOINCREMENT do banco
+            repositorio.inserir(nome_produto, categoria_produto, quantidade_estoque, preco_produto)
             print("✅ Produto Cadastrado com Sucesso!")
 
-        # Exibir a lista de produtos
         case '2':
             os.system("cls" if os.name == "nt" else "clear")
             print("\nLista de Produtos")
 
+            produtos = repositorio.listar()
+
             if not produtos:
                 print("Não há produtos cadastrados!")
             else:
-                # Percorre a lista e imprime cada produto formatado
                 for p in produtos:
-                    print(f"ID: {p['ID']}")
+                    print(f"ID: {p['id']}")
                     print(10*'-')
-                    print(f"Nome: {p['Nome']}")
+                    print(f"Nome: {p['nome']}")
                     print(10*'-')
-                    print(f"Categoria: {p['Categoria']}")
+                    print(f"Categoria: {p['categoria']}")
                     print(10*'-')
-                    print(f"Estoque: {p['Estoque']}")
+                    print(f"Estoque: {p['estoque']}")
                     print(10*'-')
-                    print(f"Preço: {formatar_preco(p['Preço'])}")
+                    # O banco guarda número puro; formatar_preco só maquia na exibição
+                    print(f"Preço: {formatar_preco(p['preco'])}")
                     print(10*'-')
 
             input("\nPressione ENTER para voltar ao menu inicial...")
             os.system("cls" if os.name == "nt" else "clear")
 
-        # Atualizar a lista de produtos
         case '3':
             os.system("cls" if os.name == "nt" else "clear")
+
+            produtos = repositorio.listar()
 
             if not produtos:
                 print("Nenhum produto cadastrado ainda.")
                 input("Pressione ENTER para voltar ao menu...")
                 os.system("cls" if os.name == "nt" else "clear")
             else:
-                # Mostra a lista pra o usuário saber qual ID escolher
                 print("Lista de Produtos\n")
                 for p in produtos:
-                    print(f"ID: {p['ID']}")
+                    print(f"ID: {p['id']}")
                     print(10*'-')
-                    print(f"Nome: {p['Nome']}")
+                    print(f"Nome: {p['nome']}")
                     print(10*'-')
-                    print(f"Categoria: {p['Categoria']}")
+                    print(f"Categoria: {p['categoria']}")
                     print(10*'-')
-                    print(f"Estoque: {p['Estoque']}")
+                    print(f"Estoque: {p['estoque']}")
                     print(10*'-')
-                    print(f"Preço: {formatar_preco(p['Preço'])}")
+                    print(f"Preço: {formatar_preco(p['preco'])}")
                     print(10*'-')
 
-                # Pede o ID do produto que quer editar (valor() já garante que é número)
                 procurar_id = pedir("\nDigite o ID do produto que deseja editar: ", validar_inteiro)
 
-                # Procura o produto com esse ID dentro da lista
-                produto_encontrado = None
-                for p in produtos:
-                    if p['ID'] == procurar_id:
-                        produto_encontrado = p
-                        break
-                # Caso o produto não for encontrado no sistema pelo ID
+                produto_encontrado = repositorio.buscar_por_id(procurar_id)
+
                 if produto_encontrado is None:
                     print("❌ Produto não encontrado")
                 else:
-                    print(f"\nEditando o Produto: {produto_encontrado['Nome']}")
+                    print(f"\nEditando o Produto: {produto_encontrado['nome']}")
                     print("Deixe em branco e pressione ENTER se não deseja alterar determinado campo.\n")
 
-                    # Mostra o valor atual numa linha, pede o novo valor na linha seguinte
-                    print(f"Nome Atual: {produto_encontrado['Nome']}")
-                    novo_nome = input("Novo Nome (ENTER para manter): ")
-                    
-                    if novo_nome.strip():
-                        produto_encontrado['Nome'] = novo_nome.title()
+                    # atual= devolve o valor gravado quando o usuário só aperta ENTER.
+                    # Sem ele, o campo seria apagado em vez de mantido.
+                    print(f"Nome Atual: {produto_encontrado['nome']}")
+                    novo_nome = pedir("Novo Nome (ENTER para manter): ", validar_texto,
+                                      atual=produto_encontrado['nome']).title()
 
-                    print(f"\nCategoria Atual: {produto_encontrado['Categoria']}")
-                    nova_categoria = input("Nova Categoria (ENTER para manter): ")
-                    if nova_categoria.strip():
-                        produto_encontrado['Categoria'] = nova_categoria.title()
+                    print(f"\nCategoria Atual: {produto_encontrado['categoria']}")
+                    nova_categoria = pedir("Nova Categoria (ENTER para manter): ", validar_texto,
+                                           atual=produto_encontrado['categoria']).title()
 
+                    print(f"\nEstoque Atual: {produto_encontrado['estoque']}")
+                    novo_estoque = pedir("Novo Estoque (ENTER para manter): ", validar_inteiro,
+                                         atual=produto_encontrado['estoque'])
 
-                    print(f"\nEstoque Atual: {produto_encontrado['Estoque']}")
-                    novo_estoque = input("Novo Estoque (ENTER para manter): ")
-                    if novo_estoque.strip():
-                        produto_encontrado['Estoque'] = int(novo_estoque)
+                    print(f"\nPreço Atual: {formatar_preco(produto_encontrado['preco'])}")
+                    novo_preco = pedir("Novo Preço (ENTER para manter): ", validar_float,
+                                       atual=produto_encontrado['preco'])
 
-                    print(f"\nPreço Atual: {produto_encontrado['Preço']}")
-                    novo_preco = input("Novo Preço (ENTER para manter): ")
-                    if novo_preco.strip():
-                        produto_encontrado['Preço'] = validar_float(novo_preco)
-
-                    with open(ARQUIVO, 'w', encoding='utf-8') as arquivo:
-                        json.dump(produtos, arquivo, ensure_ascii=False, indent=4)
-
+                    # Envia os 4 campos mesmo que só um tenha mudado: o UPDATE
+                    # do SQL reescreve a linha inteira, não campos avulsos.
+                    repositorio.atualizar(procurar_id, novo_nome, nova_categoria,
+                                          novo_estoque, novo_preco)
                     print("\n✅ Produto atualizado com sucesso!")
 
                 input("\nPressione ENTER para voltar ao menu...")
                 os.system("cls" if os.name == "nt" else "clear")
 
-        # Deletar
         case '4':
             os.system("cls" if os.name == "nt" else "clear")
+
+            produtos = repositorio.listar()
 
             if not produtos:
                 print("Nenhum produto cadastrado ainda.")
@@ -163,25 +127,20 @@ while True:
             else:
                 print("Lista de Produtos\n")
                 for p in produtos:
-                    print(f"ID: {p['ID']} | Nome: {p['Nome']} | Categoria: {p['Categoria']} | Estoque: {p['Estoque']} | Preço: {formatar_preco(p['Preço'])}")
+                    print(f"ID: {p['id']} | Nome: {p['nome']} | Categoria: {p['categoria']} | "
+                          f"Estoque: {p['estoque']} | Preço: {formatar_preco(p['preco'])}")
 
                 procurar_id = pedir("\nDigite o ID do produto que deseja deletar: ", validar_inteiro)
 
-                produto_encontrado = None
-                for p in produtos:
-                    if p['ID'] == procurar_id:
-                        produto_encontrado = p
-                        break
+                produto_encontrado = repositorio.buscar_por_id(procurar_id)
 
                 if produto_encontrado is None:
                     print("❌ Produto não encontrado")
                 else:
-                    # Confirmação antes de deletar para evitar que o usuario delete sem querer
-                    confirmar = input(f"Tem certeza que deseja deletar '{produto_encontrado['Nome']}'? (s/n): ")
+                    # Confirmação antes de deletar para evitar exclusão acidental
+                    confirmar = input(f"Tem certeza que deseja deletar '{produto_encontrado['nome']}'? (s/n): ")
                     if confirmar.lower() == 's':
-                        produtos.remove(produto_encontrado)
-                        with open(ARQUIVO, 'w', encoding='utf-8') as arquivo:
-                            json.dump(produtos, arquivo, ensure_ascii=False, indent=4)
+                        repositorio.deletar(procurar_id)
                         print("✅ Produto deletado com sucesso!")
                     else:
                         print("Operação cancelada.")
@@ -189,7 +148,6 @@ while True:
                 input("\nPressione ENTER para voltar ao menu...")
                 os.system("cls" if os.name == "nt" else "clear")
 
-        # Ultima opção: saída do programa
         case '5':
             print("Saindo do sistema...")
             time.sleep(2)
@@ -203,6 +161,6 @@ while True:
                 time.sleep(0.3)
 
             break
-        # Caso o usuario não digite nenhuma opção vale mostra isso
+
         case _:
             print("Opção inválida! Tente novamente.")
