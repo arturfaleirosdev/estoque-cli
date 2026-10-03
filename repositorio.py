@@ -1,7 +1,3 @@
-"""Acesso ao banco de dados. Todo o SQL do projeto fica aqui e em mais
-nenhum lugar — o menu nunca escreve uma query. Isso permite trocar o
-SQLite por outro banco mexendo só neste arquivo."""
-
 import sqlite3
 
 ARQUIVO_BANCO = "estoque.db"
